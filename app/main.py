@@ -1,6 +1,6 @@
 import sys
 
-from reader import read_pdf
+from app.reader import read_pdf
 
 if len(sys.argv) < 2:
     raise SystemExit(
