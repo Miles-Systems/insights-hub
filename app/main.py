@@ -1,5 +1,8 @@
+import sys
 from reader import read_pdf
 
-pdf_path = "sample/pdflatex-4-pages.pdf"
-content = read_pdf(pdf_path)
+if len(sys.argv) < 2:
+    raise SystemExit("Please provide a PDF path, for example: python app/main.py sample/[file_name].pdf")
+
+content = read_pdf(sys.argv[1])
 print(content)
