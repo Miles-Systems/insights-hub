@@ -1,8 +1,15 @@
 from io import BytesIO
+
 from pypdf import PdfReader
+from pypdf.errors import PdfReadError
+
+from app.core.exceptions import CorruptPdfError
 
 def pdf_summary(file_bytes: bytes):
-    reader = PdfReader(BytesIO(file_bytes))
+    try:
+        reader = PdfReader(BytesIO(file_bytes))
+    except PdfReadError as exc:
+        raise CorruptPdfError() from exc
 
     pages = len(reader.pages)
 
