@@ -1,17 +1,11 @@
-import sys
+from fastapi import FastAPI
+from app.api.routes import router as api_router
 
-from app.reader import read_pdf
+app = FastAPI()
 
-if len(sys.argv) < 2:
-    raise SystemExit(
-        "Please provide a PDF path, for example: python app/main.py sample/minimal-document.pdf"
-    )
+app.include_router(api_router)
 
-try:
-    content = read_pdf(sys.argv[1])
-except FileNotFoundError as exc:
-    raise SystemExit(f"Error: {exc}") from exc
-except ValueError as exc:
-    raise SystemExit(f"Error: {exc}") from exc
+@app.get("/")
+async def root():
+    return {"message": "Insights Hub API"}
 
-print(content)
