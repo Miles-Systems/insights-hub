@@ -38,7 +38,7 @@ async def upload_file(file: UploadFile | None = File(None)):
         result = pdf_service.pdf_summary(contents)
     except Exception as exc:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail={
                 "success": False,
                 "error_code": "corrupt_pdf",
