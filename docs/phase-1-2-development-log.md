@@ -63,6 +63,19 @@ Build a small FastAPI application that accepts PDF uploads, extracts text in mem
   - character_count
 - Learned how to keep the preview short and readable with simple string formatting.
 
+### 9. Adding pytest coverage for the upload route
+
+- Added pytest-based tests for the upload endpoint.
+- Covered these scenarios:
+  - successful upload of a valid PDF
+  - rejected upload of an unsupported file type
+  - rejected upload of an empty or corrupt PDF
+- Learned how to use FastAPI’s TestClient to send requests to the app in tests.
+- Used assertions to verify:
+  - status codes
+  - returned JSON fields
+  - expected error codes for invalid uploads
+
 ## Current structure
 
 - app/main.py
@@ -104,7 +117,7 @@ http://127.0.0.1:8000/docs
 
 You can test the upload endpoint there.
 
-## Key concepts learned
+## Key concepts
 
 - APIRouter for modular route organization
 - FastAPI UploadFile and multipart/form-data
@@ -126,6 +139,5 @@ You can test the upload endpoint there.
 ## Notes for future improvements
 
 - Add request/response examples to the API docs.
-- Add tests for missing files, invalid types, corrupt PDFs, and successful uploads.
 - Consider adding a database or persistent storage layer later.
 - Explore dependency injection more deeply as the app grows.
