@@ -29,3 +29,4 @@ def pdf_summary(file_bytes: bytes):
         "characters": len(full_text),
         "preview": preview,
     }
+

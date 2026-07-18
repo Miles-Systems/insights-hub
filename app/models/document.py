@@ -13,8 +13,8 @@ class Document(Base):
     page_count: Mapped[int] = mapped_column(default=0)
     uploaded_at: Mapped[datetime] = mapped_column(
         DateTime,
-        default=datetime.utcnow,
-        onupdate=datetime.utcnow,
+        default=datetime.now,
+        onupdate=datetime.now,
     )
 
     def __repr__(self) -> str:

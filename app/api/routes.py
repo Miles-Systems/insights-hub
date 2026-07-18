@@ -1,6 +1,9 @@
 from fastapi import APIRouter, File, UploadFile, HTTPException, status
 
 from app.api.health import router as health_router
+from app.database.database import get_session
+from app.models.document import Document
+from app.repositories.document_repository import DocumentRepository
 from app.schemas.upload import UploadResponse
 from app.services import pdf_service
 
@@ -45,10 +48,21 @@ async def upload_file(file: UploadFile | None = File(None)):
                 "message": "The uploaded file is not a valid PDF.",
             },
         ) from exc
-
-    return UploadResponse(
+    
+    document = Document(
         filename=file.filename,
         page_count=result["pages"],
+    )
+
+    with get_session() as session:
+        repo = DocumentRepository(session)
+        repo.create(document)
+        session.commit()
+        session.refresh(document)
+
+    return UploadResponse(
+        filename=document.filename,
+        page_count=document.page_count,
         preview=result["preview"],
         character_count=result["characters"],
     )
