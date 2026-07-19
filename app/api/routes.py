@@ -2,7 +2,7 @@ from fastapi import APIRouter, File, UploadFile, HTTPException, status
 
 from app.api.health import router as health_router
 from app.schemas.upload import UploadResponse
-from app.services import pdf_service
+from app.services.pdf_service import PDFService
 
 router = APIRouter()
 
@@ -33,9 +33,10 @@ async def upload_file(file: UploadFile | None = File(None)):
             )
 
     contents = await file.read()
+    service = PDFService()
 
     try:
-        result = pdf_service.pdf_summary(contents)
+        summary = service.pdf_summary(contents, filename=file.filename)
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -46,9 +47,11 @@ async def upload_file(file: UploadFile | None = File(None)):
             },
         ) from exc
 
+    document = service.save_document(summary)
+
     return UploadResponse(
-        filename=file.filename,
-        page_count=result["pages"],
-        preview=result["preview"],
-        character_count=result["characters"],
+        filename=document.filename,
+        page_count=document.page_count,
+        preview=summary["preview"],
+        character_count=summary["characters"],
     )

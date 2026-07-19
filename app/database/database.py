@@ -22,31 +22,3 @@ def get_session():
         raise
     finally:
         session.close()
-
-# try:
-#     with engine.connect() as connection:
-#         result = connection.execute(
-#         text("SELECT current_database();")
-#         )
-#         print(f"Connected to database: {result.scalar()}")
-
-# except SQLAlchemyError as e:
-#     print(f"Error connecting to the database: {e}")
-
-
-# def insert_data():
-#     session = SessionLocal(bind=engine)
-
-#     try:
-#         session.execute(text("INSERT INTO documents "
-#         "(filename,page_count,uploaded_at) "
-#         "VALUES "
-#         "('Session Test-2.pdf', 5, NOW());"))
-#         session.commit()
-#     except SQLAlchemyError as e:
-#         print(f"Error inserting data: {e}")
-#         session.rollback()
-#     finally:
-#         session.close()
-
-# insert_data()
