@@ -12,7 +12,7 @@ class DocumentRepository:
     def get_by_id(self, document_id: int) -> Document:
         return self.session.get(Document, document_id)
     
-    def list(self) -> list[Document]:
+    def get_all(self) -> list[Document]:
         return self.session.query(Document).all()
     
     def delete(self, document: Document) -> None:
