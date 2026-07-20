@@ -7,6 +7,7 @@ from app.core.exceptions import CorruptPdfError
 from app.database.database import get_session
 from app.models.document import Document
 from app.repositories.document_repository import DocumentRepository
+from app.schemas.document import DocumentResponse
 
 
 class PDFService:
@@ -47,3 +48,8 @@ class PDFService:
             session.commit()
             session.refresh(document)
             return document
+        
+    def get_documents(self) -> list[DocumentResponse]:
+        with get_session() as session:
+            repository = DocumentRepository(session)
+            return repository.get_all()
