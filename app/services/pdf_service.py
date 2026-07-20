@@ -7,7 +7,6 @@ from app.core.exceptions import CorruptPdfError
 from app.database.database import get_session
 from app.models.document import Document
 from app.repositories.document_repository import DocumentRepository
-from app.schemas.document import DocumentResponse
 
 
 class PDFService:
@@ -37,7 +36,7 @@ class PDFService:
             "filename": filename,
         }
 
-    def save_document(self, summary) -> Document:
+    def save_document(self, summary: dict) -> Document:
         with get_session() as session:
             repository = DocumentRepository(session)
             document = Document(
@@ -48,16 +47,16 @@ class PDFService:
             session.commit()
             session.refresh(document)
             return document
-        
-    def get_documents(self) -> list[DocumentResponse]:
+
+    def get_documents(self) -> list[Document]:
         with get_session() as session:
             repository = DocumentRepository(session)
             return repository.get_all()
-        
-    def get_document(self, document_id: int) -> DocumentResponse | None:
+
+    def get_document(self, document_id: int) -> Document | None:
         with get_session() as session:
             repository = DocumentRepository(session)
             document = repository.get_by_id(document_id)
             if document is None:
                 return None
-            return DocumentResponse.model_validate(document)
+            return document
