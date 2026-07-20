@@ -59,12 +59,13 @@ async def upload_file(file: UploadFile | None = File(None)):
         character_count=summary["characters"],
     )
 
+
 @router.get("/documents", response_model=DocumentListResponse)
 async def get_documents():
     try:
         service = PDFService()
         documents = service.get_documents()
-        return DocumentListResponse(documents=documents)
+        return {"documents": documents}
     except HTTPException:
         raise
     except Exception as exc:
@@ -77,11 +78,12 @@ async def get_documents():
             },
         ) from exc
 
+
 @router.get("/documents/{document_id}", response_model=DocumentResponse)
 async def get_document(document_id: int):
     try:
         service = PDFService()
-        document = service.get_document(document_id)
+        document = DocumentResponse.model_validate(service.get_document(document_id))
         if document is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
