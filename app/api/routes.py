@@ -1,6 +1,7 @@
 from fastapi import APIRouter, File, UploadFile, HTTPException, status
 
 from app.api.health import router as health_router
+from app.schemas.document import DocumentListResponse
 from app.schemas.upload import UploadResponse
 from app.services.pdf_service import PDFService
 
@@ -55,3 +56,19 @@ async def upload_file(file: UploadFile | None = File(None)):
         preview=summary["preview"],
         character_count=summary["characters"],
     )
+
+@router.get("/documents", response_model=DocumentListResponse)
+async def get_documents():
+    try:
+        service = PDFService()
+        documents = service.get_documents()
+        return DocumentListResponse(documents=documents)
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "success": False,
+                "error_code": "unexpected_error",
+                "message": "An unexpected error occurred while retrieving documents.",
+            },
+        ) from exc
