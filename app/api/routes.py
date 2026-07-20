@@ -83,7 +83,7 @@ async def get_documents():
 async def get_document(document_id: int):
     try:
         service = PDFService()
-        document = DocumentResponse.model_validate(service.get_document(document_id))
+        document = service.get_document(document_id)
         if document is None:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
@@ -93,7 +93,7 @@ async def get_document(document_id: int):
                     "message": "The requested document was not found.",
                 },
             )
-        return document
+        return DocumentResponse.model_validate(document)
     except HTTPException:
         raise
     except Exception as exc:
