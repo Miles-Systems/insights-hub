@@ -53,3 +53,11 @@ class PDFService:
         with get_session() as session:
             repository = DocumentRepository(session)
             return repository.get_all()
+        
+    def get_document(self, document_id: int) -> DocumentResponse | None:
+        with get_session() as session:
+            repository = DocumentRepository(session)
+            document = repository.get_by_id(document_id)
+            if document is None:
+                return None
+            return DocumentResponse.model_validate(document)

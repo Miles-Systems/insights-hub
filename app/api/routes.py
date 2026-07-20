@@ -1,7 +1,7 @@
 from fastapi import APIRouter, File, UploadFile, HTTPException, status
 
 from app.api.health import router as health_router
-from app.schemas.document import DocumentListResponse
+from app.schemas.document import DocumentListResponse, DocumentResponse
 from app.schemas.upload import UploadResponse
 from app.services.pdf_service import PDFService
 
@@ -38,6 +38,8 @@ async def upload_file(file: UploadFile | None = File(None)):
 
     try:
         summary = service.pdf_summary(contents, filename=file.filename)
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
@@ -63,6 +65,8 @@ async def get_documents():
         service = PDFService()
         documents = service.get_documents()
         return DocumentListResponse(documents=documents)
+    except HTTPException:
+        raise
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -70,5 +74,32 @@ async def get_documents():
                 "success": False,
                 "error_code": "unexpected_error",
                 "message": "An unexpected error occurred while retrieving documents.",
+            },
+        ) from exc
+
+@router.get("/documents/{document_id}", response_model=DocumentResponse)
+async def get_document(document_id: int):
+    try:
+        service = PDFService()
+        document = service.get_document(document_id)
+        if document is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "success": False,
+                    "error_code": "document_not_found",
+                    "message": "The requested document was not found.",
+                },
+            )
+        return document
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "success": False,
+                "error_code": "unexpected_error",
+                "message": "An unexpected error occurred while retrieving the document.",
             },
         ) from exc
