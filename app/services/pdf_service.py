@@ -36,7 +36,7 @@ class PDFService:
             "filename": filename,
         }
 
-    def save_document(self, summary) -> Document:
+    def save_document(self, summary: dict) -> Document:
         with get_session() as session:
             repository = DocumentRepository(session)
             document = Document(
@@ -46,4 +46,17 @@ class PDFService:
             repository.create(document)
             session.commit()
             session.refresh(document)
+            return document
+
+    def get_documents(self) -> list[Document]:
+        with get_session() as session:
+            repository = DocumentRepository(session)
+            return repository.get_all()
+
+    def get_document(self, document_id: int) -> Document | None:
+        with get_session() as session:
+            repository = DocumentRepository(session)
+            document = repository.get_by_id(document_id)
+            if document is None:
+                return None
             return document
