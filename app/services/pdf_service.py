@@ -42,6 +42,7 @@ class PDFService:
             document = Document(
                 filename=summary["filename"],
                 page_count=summary["pages"],
+                character_count=summary["characters"],
             )
             repository.create(document)
             session.commit()
