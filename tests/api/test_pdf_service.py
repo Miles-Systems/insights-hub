@@ -34,6 +34,7 @@ def test_save_document_persists_a_document(sample_pdf_bytes):
     assert isinstance(document, Document)
     assert document.filename == "minimal-document.pdf"
     assert document.page_count >= 1
+    assert document.character_count is None or document.character_count >= 0
     assert document.id is not None
 
 
@@ -44,6 +45,18 @@ def test_get_documents_returns_document_responses():
     assert isinstance(documents, list)
     assert all(hasattr(item, "id") for item in documents)
     assert all(hasattr(item, "filename") for item in documents)
+    assert all(hasattr(item, "page_count") for item in documents)
+    assert all(hasattr(item, "character_count") for item in documents)
+
+
+def test_get_document_returns_document_response():
+    service = PDFService()
+    document = service.get_document(2)
+
+    assert isinstance(document, Document)
+    assert document.page_count >= 1
+    assert document.character_count is None or document.character_count >= 0
+    assert document.id is not None
 
 
 def test_get_document_returns_none_for_missing_id():
