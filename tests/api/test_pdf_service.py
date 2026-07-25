@@ -1,35 +1,55 @@
+import io
 from pathlib import Path
 
+from fastapi import UploadFile
 import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
-from app.models.document import Document
+from app.models.document import Document, PDFSummary
 from app.services.pdf_service import PDFService
+from app.services.storage_service import StorageService
 
 client = TestClient(app)
 
 
 @pytest.fixture
-def sample_pdf_bytes():
-    pdf_path = Path("sample/minimal-document.pdf")
-    return pdf_path.read_bytes()
+def sample_upload_file():
+    """Wraps PDF bytes into a proper FastAPI UploadFile object."""
+    file_path = Path("sample/minimal-document.pdf")
+    file_bytes = file_path.read_bytes()
+
+    return UploadFile(
+        file=io.BytesIO(file_bytes),
+        filename=file_path.name,
+    )
 
 
-def test_pdf_summary_returns_expected_keys(sample_pdf_bytes):
+def test_pdf_summary_returns_expected_keys(sample_upload_file):
     service = PDFService()
-    summary = service.pdf_summary(sample_pdf_bytes, filename="minimal-document.pdf")
 
-    assert summary["filename"] == "minimal-document.pdf"
-    assert summary["pages"] >= 1
-    assert summary["characters"] >= 1
-    assert "preview" in summary
+    raw_bytes = sample_upload_file.file.read()
+    summary = service.pdf_summary(raw_bytes, filename="minimal-document.pdf")
+
+    assert isinstance(summary, PDFSummary)
+    assert summary.filename == "minimal-document.pdf"
+    assert summary.pages >= 1
+    assert summary.characters >= 1
+    assert summary.preview is not None
 
 
-def test_save_document_persists_a_document(sample_pdf_bytes):
-    service = PDFService()
-    summary = service.pdf_summary(sample_pdf_bytes, filename="minimal-document.pdf")
-    document = service.save_document(summary)
+def test_save_document_persists_a_document(sample_upload_file):
+    pdf_service = PDFService()
+    upload_service = StorageService()
+
+    raw_bytes = sample_upload_file.file.read()
+
+    sample_upload_file.file.seek(0)
+
+    uploaded_document = upload_service.save(sample_upload_file, subdirectory="uploads")
+
+    summary = pdf_service.pdf_summary(raw_bytes, filename="minimal-document.pdf")
+    document = pdf_service.save_document(summary, uploaded_document)
 
     assert isinstance(document, Document)
     assert document.filename == "minimal-document.pdf"
