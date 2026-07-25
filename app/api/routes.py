@@ -4,6 +4,7 @@ from app.api.health import router as health_router
 from app.schemas.document import DocumentListResponse, DocumentResponse
 from app.schemas.upload import UploadResponse
 from app.services.pdf_service import PDFService
+from app.services.storage_service import StorageService
 
 router = APIRouter()
 
@@ -33,11 +34,12 @@ async def upload_file(file: UploadFile | None = File(None)):
                 },
             )
 
+    upload_service = StorageService()
     contents = await file.read()
-    service = PDFService()
+    file_service = PDFService()
 
     try:
-        summary = service.pdf_summary(contents, filename=file.filename)
+        summary = file_service.pdf_summary(contents, filename=file.filename)
     except HTTPException:
         raise
     except Exception as exc:
@@ -50,13 +52,19 @@ async def upload_file(file: UploadFile | None = File(None)):
             },
         ) from exc
 
-    document = service.save_document(summary)
+    uploaded_document = upload_service.save(file, subdirectory="uploads")
+    document_summary = file_service.save_document(summary, uploaded_document)
 
     return UploadResponse(
-        filename=document.filename,
-        page_count=document.page_count,
-        preview=summary["preview"],
-        character_count=summary["characters"],
+        filename=document_summary.filename,
+        page_count=document_summary.page_count,
+        preview=summary.preview,
+        character_count=summary.characters,
+        storage_path=uploaded_document.storage_path,
+        original_filename=uploaded_document.original_filename,
+        stored_filename=uploaded_document.stored_filename,
+        file_size=uploaded_document.file_size,
+        mime_type=uploaded_document.mime_type,
     )
 
 
