@@ -1,13 +1,13 @@
 import io
 from pathlib import Path
 
-from fastapi import UploadFile
 import pytest
+from fastapi import UploadFile
 from fastapi.testclient import TestClient
 
 from app.main import app
 from app.models.document import Document, PDFSummary
-from app.services.pdf_service import PDFService
+from app.services.document_service import DocumentService
 from app.services.storage_service import StorageService
 
 client = TestClient(app)
@@ -26,7 +26,7 @@ def sample_upload_file():
 
 
 def test_pdf_summary_returns_expected_keys(sample_upload_file):
-    service = PDFService()
+    service = DocumentService()
 
     raw_bytes = sample_upload_file.file.read()
     summary = service.pdf_summary(raw_bytes, filename="minimal-document.pdf")
@@ -39,7 +39,7 @@ def test_pdf_summary_returns_expected_keys(sample_upload_file):
 
 
 def test_save_document_persists_a_document(sample_upload_file):
-    pdf_service = PDFService()
+    document_service = DocumentService()
     upload_service = StorageService()
 
     raw_bytes = sample_upload_file.file.read()
@@ -48,8 +48,8 @@ def test_save_document_persists_a_document(sample_upload_file):
 
     uploaded_document = upload_service.save(sample_upload_file, subdirectory="uploads")
 
-    summary = pdf_service.pdf_summary(raw_bytes, filename="minimal-document.pdf")
-    document = pdf_service.save_document(summary, uploaded_document)
+    summary = document_service.pdf_summary(raw_bytes, filename="minimal-document.pdf")
+    document = document_service.save_document(summary, uploaded_document)
 
     assert isinstance(document, Document)
     assert document.filename == "minimal-document.pdf"
@@ -59,7 +59,7 @@ def test_save_document_persists_a_document(sample_upload_file):
 
 
 def test_get_documents_returns_document_responses():
-    service = PDFService()
+    service = DocumentService()
     documents = service.get_documents()
 
     assert isinstance(documents, list)
@@ -70,7 +70,7 @@ def test_get_documents_returns_document_responses():
 
 
 def test_get_document_returns_document_response():
-    service = PDFService()
+    service = DocumentService()
     document = service.get_document(2)
 
     assert isinstance(document, Document)
@@ -80,7 +80,7 @@ def test_get_document_returns_document_response():
 
 
 def test_get_document_returns_none_for_missing_id():
-    service = PDFService()
+    service = DocumentService()
     document = service.get_document(999999)
 
     assert document is None
