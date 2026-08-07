@@ -10,7 +10,7 @@ from app.models.stored_file import StoredFile
 from app.repositories.document_repository import DocumentRepository
 
 
-class PDFService:
+class DocumentService:
     def pdf_summary(self, file_bytes: bytes, filename: str | None = None) -> PDFSummary:
         try:
             reader = PdfReader(BytesIO(file_bytes))

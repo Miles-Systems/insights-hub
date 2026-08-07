@@ -1,18 +1,21 @@
-from fastapi import APIRouter, File, UploadFile, HTTPException, status
+from fastapi import APIRouter, File, HTTPException, UploadFile, status
+from fastapi.responses import FileResponse
 
 from app.api.health import router as health_router
 from app.schemas.document import DocumentListResponse, DocumentResponse
 from app.schemas.upload import UploadResponse
-from app.services.pdf_service import PDFService
+from app.services.document_service import DocumentService
 from app.services.storage_service import StorageService
 
 router = APIRouter()
+
+FILE_DEFAULT = File(None)
 
 router.include_router(health_router, prefix="/api")
 
 
 @router.post("/upload", response_model=UploadResponse)
-async def upload_file(file: UploadFile | None = File(None)):
+async def upload_file(file: UploadFile | None = FILE_DEFAULT):
     if file is None or file.filename in (None, ""):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -23,20 +26,22 @@ async def upload_file(file: UploadFile | None = File(None)):
             },
         )
 
-    if file.content_type not in {"application/pdf", "application/octet-stream"}:
-        if not (file.filename and file.filename.lower().endswith(".pdf")):
-            raise HTTPException(
-                status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-                detail={
-                    "success": False,
-                    "error_code": "unsupported_file_type",
-                    "message": "Only PDF files are supported.",
-                },
-            )
+    if file.content_type not in {
+        "application/pdf",
+        "application/octet-stream",
+    } and not (file.filename and file.filename.lower().endswith(".pdf")):
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail={
+                "success": False,
+                "error_code": "unsupported_file_type",
+                "message": "Only PDF files are supported.",
+            },
+        )
 
     upload_service = StorageService()
     contents = await file.read()
-    file_service = PDFService()
+    file_service = DocumentService()
 
     try:
         summary = file_service.pdf_summary(contents, filename=file.filename)
@@ -71,7 +76,7 @@ async def upload_file(file: UploadFile | None = File(None)):
 @router.get("/documents", response_model=DocumentListResponse)
 async def get_documents():
     try:
-        service = PDFService()
+        service = DocumentService()
         documents = service.get_documents()
         return {"documents": documents}
     except HTTPException:
@@ -90,7 +95,7 @@ async def get_documents():
 @router.get("/documents/{document_id}", response_model=DocumentResponse)
 async def get_document(document_id: int):
     try:
-        service = PDFService()
+        service = DocumentService()
         document = service.get_document(document_id)
         if document is None:
             raise HTTPException(
@@ -111,5 +116,48 @@ async def get_document(document_id: int):
                 "success": False,
                 "error_code": "unexpected_error",
                 "message": "An unexpected error occurred while retrieving the document.",
+            },
+        ) from exc
+
+
+@router.get("/documents/{document_id}/download")
+async def download_document(document_id: int):
+    try:
+        service = DocumentService()
+        document = service.get_document(document_id)
+        if document is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "success": False,
+                    "error_code": "document_not_found",
+                    "message": "The requested document was not found.",
+                },
+            )
+
+        storage_service = StorageService()
+        if not storage_service.exists(document.storage_path):
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "success": False,
+                    "error_code": "file_not_found",
+                    "message": "The file associated with the document was not found.",
+                },
+            )
+
+        storage_path = storage_service.get_path(document.storage_path)
+        media_type = document.mime_type or "application/octet-stream"
+        filename = document.filename
+        return FileResponse(path=storage_path, media_type=media_type, filename=filename)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail={
+                "success": False,
+                "error_code": "unexpected_error",
+                "message": "An unexpected error occurred while downloading the document.",
             },
         ) from exc
