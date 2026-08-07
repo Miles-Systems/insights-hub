@@ -34,6 +34,11 @@ class StorageService:
             mime_type=file.content_type,
         )
 
-    # def read(self, storage_path: str) -> bytes: ...
+    def exists(self, storage_path: str) -> bool:
+        full_path = BASE_STORAGE_PATH / Path(storage_path)
+        return full_path.exists()
+
+    def get_path(self, storage_path: str) -> Path:
+        return BASE_STORAGE_PATH / Path(storage_path)
+
     # def delete(self, storage_path: str) -> None: ...
-    # def exists(self, storage_path: str) -> bool: ...
