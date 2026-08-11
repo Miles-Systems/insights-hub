@@ -3,7 +3,8 @@ from pathlib import Path
 import fitz
 import pytest
 
-from app.services.pdf_text_service import PDFExtractionError, PDFTextService
+from app.core.exceptions import PDFExtractionError
+from app.services.pdf_text_service import PDFTextService
 
 
 class DummyStorageService:
@@ -61,8 +62,18 @@ def test_missing_file_raises_file_not_found(tmp_path: Path):
         service.extract_text("does-not-exist.pdf")
 
 
-def test_invalid_pdf_raises_pdf_extraction_error():
+def test_empty_pdf_raises_pdf_extraction_error():
     invalid_path = Path("sample/corrupted.pdf")
+
+    service = PDFTextService(DummyStorageService(invalid_path))
+
+    with pytest.raises(PDFExtractionError):
+        service.extract_text("corrupted.pdf")
+
+
+def test_corrupt_pdf_raises_pdf_extraction_error(tmp_path: Path):
+    invalid_path = tmp_path / "placeholder-corrupted.pdf"
+    invalid_path.write_bytes(b"%PDF-1.5\n%%EOF\nnot a real pdf")
 
     service = PDFTextService(DummyStorageService(invalid_path))
 

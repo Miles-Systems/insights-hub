@@ -17,15 +17,24 @@ class PDFTextService:
 
         try:
             with fitz.open(path) as pdf:
+                if len(pdf) == 0:
+                    raise PDFExtractionError(
+                        f"The PDF contains no pages at storage path: {storage_path}"
+                    )
+
                 for page in pdf:
                     text = page.get_text()
                     extracted_pages.append(
-                        ExtractedPage(page_number=page.number + 1, text=text)
+                        ExtractedPage(
+                            page_number=page.number + 1,
+                            text=text,
+                        )
                     )
 
-        except fitz.fitz.FileDataError as exc:
+        except fitz.FileDataError as exc:
             raise PDFExtractionError(
-                f"The file contains corrupted or unsupported PDF data at storage path: {storage_path}"
+                f"The file contains corrupted or unsupported PDF data "
+                f"at storage path: {storage_path}"
             ) from exc
 
         return extracted_pages
