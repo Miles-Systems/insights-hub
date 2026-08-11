@@ -21,6 +21,15 @@ class CorruptPdfError(FileError):
         super().__init__(422, "corrupt_pdf", "The uploaded file is not a valid PDF.")
 
 
+class PDFExtractionError(FileError):
+    def __init__(self, message: str | None = None):
+        super().__init__(
+            422,
+            "pdf_extraction_error",
+            message or "The uploaded file could not be extracted as a valid PDF.",
+        )
+
+
 class UnexpectedProcessingError(FileError):
     def __init__(self):
         super().__init__(
@@ -28,7 +37,3 @@ class UnexpectedProcessingError(FileError):
             "unexpected_error",
             "An unexpected error occurred while processing the file.",
         )
-
-
-class PDFExtractionError(Exception):
-    pass
