@@ -1,10 +1,11 @@
 from fastapi import Request
 from fastapi.responses import JSONResponse
 
-from app.core.exceptions import UploadError
+from app.core.exceptions import FileError
 from app.schemas.error import ErrorResponse
 
-async def upload_error_handler(request: Request, exc: UploadError):
+
+async def upload_error_handler(request: Request, exc: FileError):
     payload = ErrorResponse(
         error_code=exc.error_code,
         message=exc.message,
