@@ -1,10 +1,14 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from typing import TYPE_CHECKING
 
 from sqlalchemy import DateTime, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database.base import Base
+
+if TYPE_CHECKING:
+    from app.models.document_content import DocumentContent
 
 
 class Document(Base):
@@ -19,6 +23,10 @@ class Document(Base):
     mime_type: Mapped[str] = mapped_column(String(50), nullable=True)
     uploaded_at: Mapped[datetime] = mapped_column(
         DateTime, default=lambda: datetime.now(timezone.utc)
+    )
+
+    contents: Mapped[list["DocumentContent"]] = relationship(
+        back_populates="document", cascade="all, delete-orphan"
     )
 
     def __repr__(self) -> str:
